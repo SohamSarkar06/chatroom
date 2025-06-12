@@ -1,2 +1,2 @@
 # chatroom
-uses fireflag as backend database
+uses firebase as backend database
