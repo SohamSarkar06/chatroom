@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat Room Applet</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #e0eafc, #cfdef3);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    #loginScreen,
+    #chatScreen {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      padding: 30px 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      display: none;
+      text-align: center;
+      transition: all 0.3s ease-in-out;
+    }
+
+    #loginScreen.active {
+      display: block;
+    }
+
+    #chatScreen.active {
+      min-height: 450px;
+      display: block;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      width: 90%;
+      padding: 12px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    button {
+      display: block;
+      margin: 10px auto;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 85%;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #messages {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      background: #f4f8fb;
+      text-align: left;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .message {
+      padding: 6px;
+      margin-bottom: 6px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .user {
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .my-message {
+      background-color: #e1f3ff;
+      border-radius: 6px;
+      padding: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Login screen -->
+  <div id="loginScreen" class="active">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Enter your username" />
+    <button onclick="login()">Join Chat</button>
+  </div>
+
+  <!-- Chat screen -->
+  <div id="chatScreen">
+    <h2>Chat Room</h2>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBV0CEVtzzEmwxVuASRaR4tYBjJfKHdaOI",
+      authDomain: "chatroom1-7aacd.firebaseapp.com",
+      projectId: "chatroom1-7aacd",
+      storageBucket: "chatroom1-7aacd.firebasestorage.app",
+      messagingSenderId: "355497991811",
+      appId: "1:355497991811:web:a756bf2d06818a78d245b6"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentUser = '';
+
+    function login() {
+      const usernameInput = document.getElementById('username');
+      const username = usernameInput.value.trim();
+      if (username) {
+        currentUser = username;
+        document.getElementById('loginScreen').classList.remove('active');
+        document.getElementById('chatScreen').classList.add('active');
+        listenForMessages();
+      } else {
+        alert('Please enter a username');
+      }
+    }
+
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const text = messageInput.value.trim();
+      if (text) {
+        db.ref("messages").push({
+          user: currentUser,
+          text: text,
+          timestamp: Date.now()
+        });
+        messageInput.value = '';
+      }
+    }
+
+    function listenForMessages() {
+      const messagesDiv = document.getElementById('messages');
+      db.ref("messages").on('child_added', snapshot => {
+        const msg = snapshot.val();
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message');
+        if (msg.user === currentUser) msgDiv.classList.add('my-message');
+        msgDiv.innerHTML = `<span class="user">${msg.user}:</span> ${msg.text}`;
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    }
+  </script>
+
+</body>
+
+</html>
